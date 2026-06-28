@@ -53,7 +53,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: EditEspaceSportifPageWidget.routeName,
           path: EditEspaceSportifPageWidget.routePath,
-          builder: (context, params) => EditEspaceSportifPageWidget(),
+          builder: (context, params) => EditEspaceSportifPageWidget(
+            espace: params.state.extra as EspaceSportif?,
+          ),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

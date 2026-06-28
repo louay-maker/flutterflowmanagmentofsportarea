@@ -822,8 +822,8 @@ class _AddEspaceSportifPageWidgetState
                       children: [
                         Expanded(
                           child: FFButtonWidget(
-                            onPressed: () {
-                              print('Button pressed ...');
+                            onPressed: () async {
+                              context.safePop();
                             },
                             text: 'Annuler',
                             options: FFButtonOptions(
@@ -863,7 +863,19 @@ class _AddEspaceSportifPageWidgetState
                         Expanded(
                           child: FFButtonWidget(
                             onPressed: () async {
-                              context.safePop();
+                              if (_model.formKey.currentState!.validate()) {
+                                final newEspace = EspaceSportif(
+                                  id: '',
+                                  name: _model.textController1!.text,
+                                  type: _model.dropDownValue ?? 'Terrain de football',
+                                  description: _model.textController2!.text,
+                                  location: _model.textController3!.text,
+                                  price: double.tryParse(_model.textController4!.text) ?? 0.0,
+                                  photoUrl: 'https://images.unsplash.com/photo-1659059398425-f0214a2fe0da?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjUwNjg0ODV8&ixlib=rb-4.1.0&q=80&w=1080',
+                                );
+                                await EspaceSportifService.addEspace(newEspace);
+                                context.safePop();
+                              }
                             },
                             text: 'Enregistrer',
                             options: FFButtonOptions(

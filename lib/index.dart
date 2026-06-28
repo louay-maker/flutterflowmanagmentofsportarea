@@ -5,3 +5,5 @@ export '/add_espace_sportif_page/add_espace_sportif_page_widget.dart'
     show AddEspaceSportifPageWidget;
 export '/edit_espace_sportif_page/edit_espace_sportif_page_widget.dart'
     show EditEspaceSportifPageWidget;
+export '/backend/espace_sportif_model.dart';
+export '/backend/espace_sportif_service.dart';

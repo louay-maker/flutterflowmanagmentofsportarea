@@ -37,7 +37,9 @@ export 'edit_espace_sportif_page_model.dart';
 ///
 /// Cancel
 class EditEspaceSportifPageWidget extends StatefulWidget {
-  const EditEspaceSportifPageWidget({super.key});
+  const EditEspaceSportifPageWidget({super.key, this.espace});
+
+  final EspaceSportif? espace;
 
   static String routeName = 'EditEspaceSportifPage';
   static String routePath = '/editEspaceSportifPage';
@@ -59,20 +61,24 @@ class _EditEspaceSportifPageWidgetState
     _model = createModel(context, () => EditEspaceSportifPageModel());
 
     _model.textController1 ??=
-        TextEditingController(text: 'Centre Sportif Municipal');
+        TextEditingController(text: widget.espace?.name ?? 'Centre Sportif Municipal');
     _model.textFieldFocusNode1 ??= FocusNode();
 
     _model.textController2 ??= TextEditingController(
-        text:
+        text: widget.espace?.description ??
             'Modern football field with artificial grass, floodlights, and changing rooms. Perfect for matches and training sessions.');
     _model.textFieldFocusNode2 ??= FocusNode();
 
     _model.textController3 ??=
-        TextEditingController(text: '123 Avenue des Sports, Paris 75015');
+        TextEditingController(text: widget.espace?.location ?? '123 Avenue des Sports, Paris 75015');
     _model.textFieldFocusNode3 ??= FocusNode();
 
-    _model.textController4 ??= TextEditingController(text: '45');
+    _model.textController4 ??= TextEditingController(text: widget.espace?.price.toString() ?? '45');
     _model.textFieldFocusNode4 ??= FocusNode();
+
+    if (widget.espace != null) {
+      _model.dropDownValue = widget.espace!.type;
+    }
   }
 
   @override
@@ -179,8 +185,9 @@ class _EditEspaceSportifPageWidgetState
                                 child: CachedNetworkImage(
                                   fadeInDuration: Duration(milliseconds: 0),
                                   fadeOutDuration: Duration(milliseconds: 0),
-                                  imageUrl:
-                                      'https://images.unsplash.com/photo-1645076112494-1a1f714ae735?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjUwNjg3MTJ8&ixlib=rb-4.1.0&q=80&w=1080',
+                                  imageUrl: widget.espace?.photoUrl.isNotEmpty == true
+                                      ? widget.espace!.photoUrl
+                                      : 'https://images.unsplash.com/photo-1645076112494-1a1f714ae735?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjUwNjg3MTJ8&ixlib=rb-4.1.0&q=80&w=1080',
                                   width: double.infinity,
                                   height: double.infinity,
                                   fit: BoxFit.cover,
@@ -729,10 +736,21 @@ class _EditEspaceSportifPageWidgetState
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.max,
-                      children: [
-                        FFButtonWidget(
-                          onPressed: () {
-                            print('Button pressed ...');
+                      children: [                         FFButtonWidget(
+                          onPressed: () async {
+                            if (_model.formKey.currentState!.validate()) {
+                              final updatedEspace = EspaceSportif(
+                                id: widget.espace?.id ?? '',
+                                name: _model.textController1!.text,
+                                type: _model.dropDownValue ?? 'Football Field',
+                                description: _model.textController2!.text,
+                                location: _model.textController3!.text,
+                                price: double.tryParse(_model.textController4!.text) ?? 0.0,
+                                photoUrl: widget.espace?.photoUrl ?? 'https://images.unsplash.com/photo-1645076112494-1a1f714ae735?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NjUwNjg3MTJ8&ixlib=rb-4.1.0&q=80&w=1080',
+                              );
+                              await EspaceSportifService.updateEspace(updatedEspace);
+                              context.safePop();
+                            }
                           },
                           text: 'Save Changes',
                           options: FFButtonOptions(
@@ -771,8 +789,28 @@ class _EditEspaceSportifPageWidgetState
                           children: [
                             Expanded(
                               child: FFButtonWidget(
-                                onPressed: () {
-                                  print('Button pressed ...');
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Supprimer l\'espace'),
+                                      content: const Text('Voulez-vous vraiment supprimer cet espace ?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text('Annuler'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true && widget.espace != null) {
+                                    await EspaceSportifService.deleteEspace(widget.espace!.id);
+                                    context.pushNamed(EspaceSportifHomePageWidget.routeName);
+                                  }
                                 },
                                 text: 'Delete Space',
                                 options: FFButtonOptions(
@@ -812,8 +850,8 @@ class _EditEspaceSportifPageWidgetState
                             ),
                             Expanded(
                               child: FFButtonWidget(
-                                onPressed: () {
-                                  print('Button pressed ...');
+                                onPressed: () async {
+                                  context.safePop();
                                 },
                                 text: 'Cancel',
                                 options: FFButtonOptions(
@@ -853,7 +891,7 @@ class _EditEspaceSportifPageWidgetState
                               ),
                             ),
                           ].divide(SizedBox(width: 12.0)),
-                        ),
+                        ),),
                       ]
                           .divide(SizedBox(height: 16.0))
                           .addToStart(SizedBox(height: 24.0)),
